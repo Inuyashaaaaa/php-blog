@@ -51,9 +51,9 @@ class Adminuser extends \yii\db\ActiveRecord implements IdentityInterface
     {
         return [
             'id' => 'ID',
-            'username' => 'Username',
-            'nickname' => 'Nickname',
-            'password' => 'Password',
+            'username' => '用户名',
+            'nickname' => '昵称',
+            'password' => '密码',
             'email' => 'Email',
             'profile' => 'Profile',
         	'auth_key' => 'Auth Key',
