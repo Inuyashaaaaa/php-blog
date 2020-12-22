@@ -1,5 +1,8 @@
 <?php
 
+use common\models\Adminuser;
+use common\models\Poststatus;
+use common\models\Post;
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
@@ -18,16 +21,35 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'tags')->textarea(['rows' => 6]) ?>
 
-    <?= $form->field($model, 'status')->textInput() ?>
+    <?php 
+        // $psObjs = Poststatus::find()->all();
+        // $allStatus = ArrayHelper::map($psObjs, 'id', 'name');
 
-    <?= $form->field($model, 'create_time')->textInput() ?>
+        // $allStatus = (new \yii\db\Query())
+        // ->select(['name', 'id'])
+        // ->from('poststatus')
+        // ->indexBy('id')
+        // ->column()
+    
+        $allStatus = Poststatus::find()
+        ->select(['name', 'id'])
+        ->orderBy('position')
+        ->indexBy('id')
+        ->column();
 
-    <?= $form->field($model, 'update_time')->textInput() ?>
+        $allAdminuser = Adminuser::find()
+        ->select(['nickname', 'id'])
+        ->indexBy('id')
+        ->column();
+        
+    ?>
 
-    <?= $form->field($model, 'author_id')->textInput() ?>
+    <?= $form->field($model, 'status')->dropDownList($allStatus, ['prompt' => '请选择状态']) ?>
+
+    <?= $form->field($model, 'author_id')->dropDownList($allAdminuser, ['prompt' => '请选择作者']) ?>
 
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('保存', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
