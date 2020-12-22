@@ -18,9 +18,17 @@ return [
             'csrfParam' => '_csrf-backend',
         ],
         'user' => [
-            'identityClass' => 'common\models\User',
+            'identityClass' => 'common\models\Adminuser',
             'enableAutoLogin' => true,
             'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
+        ],
+        'session' => [
+            'name' => 'PHPBACKSESSION',
+            'savePath' => sys_get_temp_dir(),
+        ],
+        'request' => [
+            'cookieValidationKey' => 'sdfjjksloeedf78789judf',
+            'csrfParam' => '_adminCSRF',
         ],
         'session' => [
             // this is the name of the session cookie used for login on the backend
