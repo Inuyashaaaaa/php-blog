@@ -7,6 +7,7 @@ use Yii;
 use common\models\Post;
 use common\models\PostSearch;
 use common\models\Tag;
+use common\models\User;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
@@ -16,6 +17,7 @@ use yii\filters\VerbFilter;
  */
 class PostController extends Controller
 {
+    public $added = 0;
     /**
      * {@inheritdoc}
      */
@@ -130,5 +132,37 @@ class PostController extends Controller
         }
 
         throw new NotFoundHttpException('The requested page does not exist.');
+    }
+
+    public function actionDetail($id)
+    {
+        //step1. 准备数据模型   	
+        $model = $this->findModel($id);
+        $tags = Tag::findTagWeights();
+        $recentComments = Comment::findRecentComments();
+
+        $userMe = User::findOne(Yii::$app->user->id);
+        $commentModel = new Comment();
+        $commentModel->email = $userMe->email;
+        $commentModel->userid = $userMe->id;
+
+        //step2. 当评论提交时，处理评论
+        if ($commentModel->load(Yii::$app->request->post())) {
+            $commentModel->status = 1; //新评论默认状态为 pending
+            $commentModel->post_id = $id;
+            if ($commentModel->save()) {
+                $this->added = 1;
+            }
+        }
+
+        //step3.传数据给视图渲染
+
+        return $this->render('detail', [
+            'model' => $model,
+            'tags' => $tags,
+            'recentComments' => $recentComments,
+            'commentModel' => $commentModel,
+            'added' => $this->added,
+        ]);
     }
 }
