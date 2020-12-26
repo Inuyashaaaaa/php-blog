@@ -94,25 +94,28 @@ class Comment extends \yii\db\ActiveRecord
         return $this->hasOne(User::className(), ['id' => 'userid']);
     }
 
-    public function getBeginning() {
+    public function getBeginning()
+    {
         $tmpStr = strip_tags($this->content);
         $tmpLen = mb_strlen($tmpStr);
 
-        return mb_substr($tmpStr, 0, 20, 'utf-8').(($tmpLen > 20) ? '...' : '');
+        return mb_substr($tmpStr, 0, 20, 'utf-8') . (($tmpLen > 20) ? '...' : '');
     }
 
-    public function approve() {
+    public function approve()
+    {
         $this->status = 2;
         return ($this->save());
     }
 
-    public static function getPendingCommentCount() {
+    public static function getPendingCommentCount()
+    {
         return Comment::find()->where(['status' => 1])->count();
     }
 
     public function beforeSave($insert)
     {
-        if(parent::beforeSave($insert)) {
+        if (parent::beforeSave($insert)) {
             if ($insert) {
                 $this->create_time = time();
             }
@@ -120,7 +123,9 @@ class Comment extends \yii\db\ActiveRecord
         }
         return false;
     }
-    
 
-
+    public static function findRecentComments($limit = 10)
+    {
+        return Comment::find()->where(['status' => 2])->orderBy(['create_time' => SORT_DESC])->limit($limit)->all();
+    }
 }
