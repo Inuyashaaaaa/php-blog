@@ -8,7 +8,7 @@ use common\models\PostSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
-use yii\web\ForbiddenHttpException;
+use yii\filters\AccessControl;
 
 /**
  * PostController implements the CRUD actions for Post model.
@@ -16,7 +16,7 @@ use yii\web\ForbiddenHttpException;
 class PostController extends Controller
 {
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public function behaviors()
     {
@@ -25,6 +25,23 @@ class PostController extends Controller
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'delete' => ['POST'],
+                ],
+            ],
+
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' =>
+                [
+                    [
+                        'actions' => ['index', 'view'],
+                        'allow' => true,
+                        'roles' => ['?'],
+                    ],
+                    [
+                        'actions' => ['view', 'index', 'create', 'update', 'delete'],
+                        'allow' => true,
+                        'roles' => ['@'],
+                    ],
                 ],
             ],
         ];
@@ -49,20 +66,9 @@ class PostController extends Controller
      * Displays a single Post model.
      * @param integer $id
      * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
-        // $post = Yii::$app->db
-        //     ->createCommand('select * from post where id=:id and status=:status')
-        //     ->bindValue(':id', $_GET['id'])
-        //     ->bindValue(':status', 2)
-        //     ->queryOne();
-        // $post = Post::find()->where(['status' => 2])->all();
-        // $post = Post::find()->where(['AND', ['status' => 2], ['author_id' => 1], 
-        // ['Like', 'title', 'yii2']])->orderBy('id')->all();
-        // var_dump($post);
-        // exit(0);
         return $this->render('view', [
             'model' => $this->findModel($id),
         ]);
@@ -75,19 +81,15 @@ class PostController extends Controller
      */
     public function actionCreate()
     {
-        if (!Yii::$app->user->can('createPost')) {
-            throw new ForbiddenHttpException('对不起，你没有进行该操作的权限');
-        }
-
         $model = new Post();
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
+        } else {
+            return $this->render('create', [
+                'model' => $model,
+            ]);
         }
-
-        return $this->render('create', [
-            'model' => $model,
-        ]);
     }
 
     /**
@@ -95,22 +97,18 @@ class PostController extends Controller
      * If update is successful, the browser will be redirected to the 'view' page.
      * @param integer $id
      * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
     {
-        if (!Yii::$app->user->can('updatePost')) {
-            throw new ForbiddenHttpException('对不起，你没有进行该操作的权限');
-        }
         $model = $this->findModel($id);
 
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
+        } else {
+            return $this->render('update', [
+                'model' => $model,
+            ]);
         }
-
-        return $this->render('update', [
-            'model' => $model,
-        ]);
     }
 
     /**
@@ -118,13 +116,9 @@ class PostController extends Controller
      * If deletion is successful, the browser will be redirected to the 'index' page.
      * @param integer $id
      * @return mixed
-     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
     {
-        if (!Yii::$app->user->can('deletePost')) {
-            throw new ForbiddenHttpException('对不起，你没有进行该操作的权限');
-        }
         $this->findModel($id)->delete();
 
         return $this->redirect(['index']);
@@ -141,8 +135,8 @@ class PostController extends Controller
     {
         if (($model = Post::findOne($id)) !== null) {
             return $model;
+        } else {
+            throw new NotFoundHttpException('The requested page does not exist.');
         }
-
-        throw new NotFoundHttpException('The requested page does not exist.');
     }
 }

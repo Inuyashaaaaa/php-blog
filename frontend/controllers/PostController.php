@@ -11,6 +11,7 @@ use common\models\User;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\rest\Serializer;
 
 /**
  * PostController implements the CRUD actions for Post model.
@@ -29,7 +30,34 @@ class PostController extends Controller
                 'actions' => [
                     'delete' => ['POST'],
                 ],
+
             ],
+            'pageCache' => [
+                'class' => 'yii\filters\PageCache',
+                'only' => ['index'],
+                'duration' => 600,
+                'variations' => [
+                    Yii::$app->request->get('page'),
+                    Yii::$app->request->get('PostSearch'),
+                ],
+                'dependency' => [
+                    'class' => 'yii\caching\DbDependency',
+                    'sql' => 'select count(id) from post',
+                ],
+            ],
+            'httpCache' => [
+                'class' => 'yii\filters\HttpCache',
+                'only' => ['detail'],
+                'lastModified' => function ($action, $params) {
+                    $q = new \yii\db\Query();
+                    return $q->from('post')->max('update_time');
+                },
+                // 'etagSeed' => function ($action, $params) {
+                //     $post = $this->findModel(Yii::$app->request->get('id'));
+                //     return serialize([$post->title, $post->content]);
+                // },
+                // 'cacheControlHeader' => 'public,max-age=600',
+            ]
         ];
     }
 
@@ -136,7 +164,6 @@ class PostController extends Controller
 
     public function actionDetail($id)
     {
-        //step1. 准备数据模型   	
         $model = $this->findModel($id);
         $tags = Tag::findTagWeights();
         $recentComments = Comment::findRecentComments();
@@ -146,7 +173,6 @@ class PostController extends Controller
         $commentModel->email = $userMe->email;
         $commentModel->userid = $userMe->id;
 
-        //step2. 当评论提交时，处理评论
         if ($commentModel->load(Yii::$app->request->post())) {
             $commentModel->status = 1; //新评论默认状态为 pending
             $commentModel->post_id = $id;
@@ -155,7 +181,6 @@ class PostController extends Controller
             }
         }
 
-        //step3.传数据给视图渲染
 
         return $this->render('detail', [
             'model' => $model,

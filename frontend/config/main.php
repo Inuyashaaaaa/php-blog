@@ -11,7 +11,7 @@ return [
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'controllerNamespace' => 'frontend\controllers',
-    'defaultRoute' => 'post/index', 
+    'defaultRoute' => 'post/index',
     'language' => 'zh-CN',
     'components' => [
         'request' => [
@@ -38,14 +38,15 @@ return [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        /*
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
+            'suffix' => '.html',
             'rules' => [
+                '<controller:\w+>/<id:\d+>' => '<controller>/detail',
+                'posts' => 'post/index',
             ],
         ],
-        */
     ],
     'params' => $params,
 ];
