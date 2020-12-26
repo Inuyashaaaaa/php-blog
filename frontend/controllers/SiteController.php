@@ -3,216 +3,212 @@
 namespace frontend\controllers;
 
 use Yii;
-use common\models\Post;
-use common\models\PostSearch;
+use yii\base\InvalidParamException;
+use yii\web\BadRequestHttpException;
 use yii\web\Controller;
-use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
-
-use common\models\Tag;
-use common\models\Comment;
-use common\models\User;
-use yii\rest\Serializer;
+use common\models\LoginForm;
+use frontend\models\PasswordResetRequestForm;
+use frontend\models\ResetPasswordForm;
+use frontend\models\SignupForm;
+use frontend\models\ContactForm;
 
 /**
- * PostController implements the CRUD actions for Post model.
+ * Site controller
  */
-class PostController extends Controller
+class SiteController extends Controller
 {
-    public $added = 0; //0代表还没有新回复
     /**
      * @inheritdoc
      */
     public function behaviors()
     {
         return [
-            'verbs' => [
-                'class' => VerbFilter::className(),
-                'actions' => [
-                    'delete' => ['POST'],
-                ],
-            ],
-
-
             'access' => [
                 'class' => AccessControl::className(),
-                'rules' =>
-                [
+                'only' => ['logout', 'signup'],
+                'rules' => [
                     [
-                        'actions' => ['index'],
+                        'actions' => ['signup'],
                         'allow' => true,
                         'roles' => ['?'],
                     ],
                     [
-                        'actions' => ['index', 'detail'],
+                        'actions' => ['logout'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
                 ],
             ],
-
-            'pageCache' => [
-                'class' => 'yii\filters\PageCache',
-                'only' => ['index'],
-                'duration' => 600,
-                'variations' => [
-                    Yii::$app->request->get('page'),
-                    Yii::$app->request->get('PostSearch'),
-                ],
-                'dependency' => [
-                    'class' => 'yii\caching\DbDependency',
-                    'sql' => 'select count(id) from post',
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'logout' => ['post'],
                 ],
             ],
-
-            'httpCache' => [
-                'class' => 'yii\filters\HttpCache',
-                'only' => ['detail'],
-                'lastModified' => function ($action, $params) {
-                    $q = new \yii\db\Query();
-                    return $q->from('post')->max('update_time');
-                },
-                'etagSeed' => function ($action, $params) {
-                    $post = $this->findModel(Yii::$app->request->get('id'));
-                    return serialize([$post->title, $post->content]);
-                },
-
-                'cacheControlHeader' => 'public,max-age=600',
-
-            ],
-
-
         ];
     }
 
     /**
-     * Lists all Post models.
+     * @inheritdoc
+     */
+    public function actions()
+    {
+        return [
+            'error' => [
+                'class' => 'yii\web\ErrorAction',
+            ],
+            'captcha' => [
+                'class' => 'yii\captcha\CaptchaAction',
+                'fixedVerifyCode' => YII_ENV_TEST ? 'testme' : null,
+            ],
+        ];
+    }
+
+    /**
+     * Displays homepage.
+     *
      * @return mixed
      */
     public function actionIndex()
     {
-        $tags = Tag::findTagWeights();
-        $recentComments = Comment::findRecentComments();
-
-        $searchModel = new PostSearch();
-        $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-            'tags' => $tags,
-            'recentComments' => $recentComments,
-        ]);
+        return $this->render('index');
     }
 
     /**
-     * Displays a single Post model.
-     * @param integer $id
+     * Logs in a user.
+     *
      * @return mixed
      */
-    public function actionView($id)
+    public function actionLogin()
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
-    }
+        if (!Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
 
-    /**
-     * Creates a new Post model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return mixed
-     */
-    public function actionCreate()
-    {
-        $model = new Post();
-
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        $model = new LoginForm();
+        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            return $this->goBack();
         } else {
-            return $this->render('create', [
+            return $this->render('login', [
                 'model' => $model,
             ]);
         }
     }
 
     /**
-     * Updates an existing Post model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param integer $id
+     * Logs out the current user.
+     *
      * @return mixed
      */
-    public function actionUpdate($id)
+    public function actionLogout()
     {
-        $model = $this->findModel($id);
+        Yii::$app->user->logout();
 
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+        return $this->goHome();
+    }
+
+    /**
+     * Displays contact page.
+     *
+     * @return mixed
+     */
+    public function actionContact()
+    {
+        $model = new ContactForm();
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
+                Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
+            } else {
+                Yii::$app->session->setFlash('error', 'There was an error sending email.');
+            }
+
+            return $this->refresh();
         } else {
-            return $this->render('update', [
+            return $this->render('contact', [
                 'model' => $model,
             ]);
         }
     }
 
     /**
-     * Deletes an existing Post model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param integer $id
+     * Displays about page.
+     *
      * @return mixed
      */
-    public function actionDelete($id)
+    public function actionAbout()
     {
-        $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        return $this->render('about');
     }
 
     /**
-     * Finds the Post model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param integer $id
-     * @return Post the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
+     * Signs user up.
+     *
+     * @return mixed
      */
-    protected function findModel($id)
+    public function actionSignup()
     {
-        if (($model = Post::findOne($id)) !== null) {
-            return $model;
-        } else {
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
-    }
-
-    public function actionDetail($id)
-    {
-        //step1. 准备数据模型   	
-        $model = $this->findModel($id);
-        $tags = Tag::findTagWeights();
-        $recentComments = Comment::findRecentComments();
-
-        $userMe = User::findOne(Yii::$app->user->id);
-        $commentModel = new Comment();
-        $commentModel->email = $userMe->email;
-        $commentModel->userid = $userMe->id;
-
-        //step2. 当评论提交时，处理评论
-        if ($commentModel->load(Yii::$app->request->post())) {
-            $commentModel->status = 1; //新评论默认状态为 pending
-            $commentModel->post_id = $id;
-            if ($commentModel->save()) {
-                $this->added = 1;
+        $model = new SignupForm();
+        if ($model->load(Yii::$app->request->post())) {
+            if ($user = $model->signup()) {
+                if (Yii::$app->getUser()->login($user)) {
+                    return $this->goHome();
+                }
             }
         }
 
-        //step3.传数据给视图渲染
-
-        return $this->render('detail', [
+        return $this->render('signup', [
             'model' => $model,
-            'tags' => $tags,
-            'recentComments' => $recentComments,
-            'commentModel' => $commentModel,
-            'added' => $this->added,
+        ]);
+    }
+
+    /**
+     * Requests password reset.
+     *
+     * @return mixed
+     */
+    public function actionRequestPasswordReset()
+    {
+        $model = new PasswordResetRequestForm();
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            if ($model->sendEmail()) {
+                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
+
+                return $this->goHome();
+            } else {
+                Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for email provided.');
+            }
+        }
+
+        return $this->render('requestPasswordResetToken', [
+            'model' => $model,
+        ]);
+    }
+
+    /**
+     * Resets password.
+     *
+     * @param string $token
+     * @return mixed
+     * @throws BadRequestHttpException
+     */
+    public function actionResetPassword($token)
+    {
+        try {
+            $model = new ResetPasswordForm($token);
+        } catch (InvalidParamException $e) {
+            throw new BadRequestHttpException($e->getMessage());
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
+            Yii::$app->session->setFlash('success', 'New password was saved.');
+
+            return $this->goHome();
+        }
+
+        return $this->render('resetPassword', [
+            'model' => $model,
         ]);
     }
 }
