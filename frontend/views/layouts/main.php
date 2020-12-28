@@ -3,6 +3,7 @@
 /* @var $this \yii\web\View */
 /* @var $content string */
 
+use Yii;
 use yii\helpers\Html;
 use yii\bootstrap\Nav;
 use yii\bootstrap\NavBar;
@@ -59,7 +60,7 @@ AppAsset::register($this);
             NavBar::end();
             ?>
             <div class="jumbotron intro-header">
-                <h1><?=  ?></h1>
+                <h1>Huro's blog</h1>
                 <h2>To Be A Lean Developer!</h2>
             </div>
         </header>

@@ -14,9 +14,6 @@ return [
     'modules' => [],
     'language' => 'zh-CN',
     'components' => [
-        'request' => [
-            'csrfParam' => '_csrf-backend',
-        ],
         'user' => [
             'identityClass' => 'common\models\Adminuser',
             'enableAutoLogin' => true,
@@ -29,10 +26,6 @@ return [
         'request' => [
             'cookieValidationKey' => 'sdfjjksloeedf78789judf',
             'csrfParam' => '_adminCSRF',
-        ],
-        'session' => [
-            // this is the name of the session cookie used for login on the backend
-            'name' => 'advanced-backend',
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
