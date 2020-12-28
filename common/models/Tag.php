@@ -113,4 +113,14 @@ class Tag extends \yii\db\ActiveRecord
         }
         return $tags;
     }
+
+    public static function findTagW($limit = 100)
+    {
+        $models = Tag::find()->orderBy('frequency desc')->limit($limit)->all();
+        $tags = array();
+        foreach ($models as $model) {
+            $tags[] = $model->frequency;
+        }
+        return $tags;
+    }
 }

@@ -19,29 +19,44 @@ use yii\widgets\ActiveForm;
 
     <?= $form->field($model, 'content')->textarea(['rows' => 6]) ?>
 
+    <textarea id="markdown-editor"></textarea>
+
+    <script>
+        const simplemde = new SimpleMDE({
+            element: document.getElementById("markdown-editor")
+        });
+        const dom = document.getElementById('post-content');
+        simplemde.value(dom.value);
+        dom.style.visibility = 'hidden';
+        dom.style.height = '0';
+        simplemde.codemirror.on("change", function() {
+            dom.value = simplemde.value()
+        });
+    </script>
+
     <?= $form->field($model, 'tags')->textarea(['rows' => 6]) ?>
 
-    <?php 
-        // $psObjs = Poststatus::find()->all();
-        // $allStatus = ArrayHelper::map($psObjs, 'id', 'name');
+    <?php
+    // $psObjs = Poststatus::find()->all();
+    // $allStatus = ArrayHelper::map($psObjs, 'id', 'name');
 
-        // $allStatus = (new \yii\db\Query())
-        // ->select(['name', 'id'])
-        // ->from('poststatus')
-        // ->indexBy('id')
-        // ->column()
-    
-        $allStatus = Poststatus::find()
+    // $allStatus = (new \yii\db\Query())
+    // ->select(['name', 'id'])
+    // ->from('poststatus')
+    // ->indexBy('id')
+    // ->column()
+
+    $allStatus = Poststatus::find()
         ->select(['name', 'id'])
         ->orderBy('position')
         ->indexBy('id')
         ->column();
 
-        $allAdminuser = Adminuser::find()
+    $allAdminuser = Adminuser::find()
         ->select(['nickname', 'id'])
         ->indexBy('id')
         ->column();
-        
+
     ?>
 
     <?= $form->field($model, 'status')->dropDownList($allStatus, ['prompt' => '请选择状态']) ?>

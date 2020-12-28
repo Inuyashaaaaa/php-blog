@@ -23,30 +23,15 @@ Yii::$app->params['intro'] = $model->title
                     ?>
                 </div>
                 <br>
-                <div class="nav">
-                    <?= Html::a("评论({$model->commentCount})", $model->url . '#comments'); ?>
-                    最后修改于<?= date('Y-m-d H:i:s', $model->update_time); ?>
-                </div>
             </div>
             <div id="comments">
-                <?php if ($added) { ?>
-                    <br>
-                    <div class="alert alert-warning alert-dismissible" role="alert">
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4>谢谢您的回复，我们会尽快审核后发布出来！</h4>
-                        <p><?= nl2br($commentModel->content); ?></p>
-                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span><em><?= date('Y-m-d H:i:s', $model->create_time) . "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"; ?></em>
-                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span><em><?= Html::encode($model->author->nickname); ?></em>
-                    </div>
-                <?php } ?>
-                <?php if ($model->commentCount >= 1) : ?>
-                    <h5><?= $model->commentCount . '条评论'; ?></h5>
-                    <?= $this->render('_comment', array(
-                        'post' => $model,
-                        'comments' => $model->activeComments,
-                    )); ?>
-                <?php endif; ?>
-                <h5>发表评论</h5>
+                <hr />
+                <h2 style="color: black">评论</h2>
+                <?= $this->render('_comment', array(
+                    'post' => $model,
+                    'comments' => $model->activeComments,
+                )); ?>
+                <hr />
                 <?php
                 $commentModel = new Comment();
                 echo $this->render('_guestform', array(
@@ -68,8 +53,55 @@ Yii::$app->params['intro'] = $model->title
                 </form>
             </div>
             <hr />
+
             <div class="tagcloudbox">
                 <h5>Feature Tags</h5>
+                <div id="main" style="height: 300px">
+
+                </div>
+                <script>
+                    var chart = echarts.init(document.getElementById('main'));
+                    var arr = eval('<?php echo json_encode($tags) ?>');
+                    var weight = eval('<?php echo json_encode($tagsWeight) ?>');
+                    const obj = arr.map((value, index) => {
+                        return {
+                            name: value,
+                            value: weight[index]
+                        }
+                    })
+                    console.log(obj)
+                    var option = {
+                        tooltip: {},
+                        series: [{
+                            type: 'wordCloud',
+                            gridSize: 2,
+                            sizeRange: [20, 60],
+                            rotationRange: [-90, 90],
+                            shape: 'pentagon',
+                            drawOutOfBound: false,
+                            textStyle: {
+                                normal: {
+                                    color: function() {
+                                        return 'rgb(' + [
+                                            Math.round(Math.random() * 160),
+                                            Math.round(Math.random() * 160),
+                                            Math.round(Math.random() * 160)
+                                        ].join(',') + ')';
+                                    }
+                                },
+                                emphasis: {
+                                    shadowBlur: 10,
+                                    shadowColor: '#333'
+                                }
+                            },
+                            data: obj,
+                        }]
+                    };
+
+                    chart.setOption(option);
+
+                    window.onresize = chart.resize;
+                </script>
                 <?= TagsCloudWidget::widget(['tags' => $tags]); ?>
             </div>
             <hr />

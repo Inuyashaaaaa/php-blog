@@ -2,6 +2,7 @@
 
 namespace common\models;
 
+use Parsedown;
 use Yii;
 
 use Yii\helpers\Html;
@@ -147,6 +148,8 @@ class Post extends \yii\db\ActiveRecord
         $tmpLen = mb_strlen($tmpStr);
 
         $tmpStr = mb_substr($tmpStr, 0, $length, 'utf-8');
+        $Parsedown = new Parsedown();
+        $tmpStr = $Parsedown->line($tmpStr);
         return $tmpStr . ($tmpLen > $length ? '...' : '');
     }
 

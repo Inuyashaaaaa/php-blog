@@ -38,8 +38,55 @@ use common\models\Post;
 			<hr />
 			<div class="tagcloudbox">
 				<h5>Feature Tags</h5>
+				<div id="main" style="height: 300px">
+
+				</div>
+				<script>
+					var chart = echarts.init(document.getElementById('main'));
+					var arr = eval('<?php echo json_encode($tags) ?>');
+					var weight = eval('<?php echo json_encode($tagsWeight) ?>');
+					const obj = arr.map((value, index) => {
+						return {
+							name: value,
+							value: weight[index]
+						}
+					})
+					console.log(obj)
+					var option = {
+						tooltip: {},
+						series: [{
+							type: 'wordCloud',
+							gridSize: 2,
+							sizeRange: [20, 60],
+							rotationRange: [-90, 90],
+							shape: 'pentagon',
+							drawOutOfBound: false,
+							textStyle: {
+								normal: {
+									color: function() {
+										return 'rgb(' + [
+											Math.round(Math.random() * 160),
+											Math.round(Math.random() * 160),
+											Math.round(Math.random() * 160)
+										].join(',') + ')';
+									}
+								},
+								emphasis: {
+									shadowBlur: 10,
+									shadowColor: '#333'
+								}
+							},
+							data: obj,
+						}]
+					};
+
+					chart.setOption(option);
+
+					window.onresize = chart.resize;
+				</script>
 				<?= TagsCloudWidget::widget(['tags' => $tags]); ?>
 			</div>
+
 			<hr />
 		</div>
 	</div>

@@ -18,7 +18,6 @@ use yii\rest\Serializer;
  */
 class PostController extends Controller
 {
-    public $added = 0;
     /**
      * {@inheritdoc}
      */
@@ -43,6 +42,7 @@ class PostController extends Controller
     {
         $tags = Tag::findTagWeights();
         $recentComments = Comment::findRecentComments();
+        $tagsWeight = Tag::findTagW();
 
         $searchModel = new PostSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
@@ -52,6 +52,7 @@ class PostController extends Controller
             'dataProvider' => $dataProvider,
             'tags' => $tags,
             'recentComments' => $recentComments,
+            'tagsWeight' => $tagsWeight,
         ]);
     }
 
@@ -67,7 +68,7 @@ class PostController extends Controller
             'model' => $this->findModel($id),
         ]);
     }
-    
+
     /**
      * Finds the Post model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
@@ -88,28 +89,26 @@ class PostController extends Controller
     {
         $model = $this->findModel($id);
         $tags = Tag::findTagWeights();
+        $tagsWeight = Tag::findTagW();
         $recentComments = Comment::findRecentComments();
-
         $userMe = User::findOne(Yii::$app->user->id);
         $commentModel = new Comment();
         $commentModel->email = $userMe->email;
         $commentModel->userid = $userMe->id;
-
         if ($commentModel->load(Yii::$app->request->post())) {
-            $commentModel->status = 1; //新评论默认状态为 pending
+            $commentModel->status = 2;
             $commentModel->post_id = $id;
-            if ($commentModel->save()) {
-                $this->added = 1;
-            }
+            $commentModel->remind = 0;
+            if($commentModel->save()) {
+                $this->refresh();
+            };
         }
-
-
         return $this->render('detail', [
             'model' => $model,
             'tags' => $tags,
             'recentComments' => $recentComments,
             'commentModel' => $commentModel,
-            'added' => $this->added,
+            'tagsWeight' => $tagsWeight,
         ]);
     }
 }

@@ -7,16 +7,14 @@ use yii\helpers\Html;
     <div class="comment">
         <div class="row">
             <div class="col-md-12">
-                <div class="comment_detail">
-                    <p class="bg-info">
-                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-                        <em><?= Html::encode($comment->user->username); ?>;</em>
-                        <br>
-                        <?= nl2br($comment->content); ?>
-                        <br>
-                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
-                        <em><?= date('Y-m-d H:i:s', $comment->create_time); ?>;</em>
-                    </p>
+                <div class="panel panel-default">
+                    <div class="panel-heading" style="display: flex; justify-content:space-between;">
+                        <h3 class="panel-title"> <?= Html::encode($comment->user->username); ?></h3>
+                        <em><?= date('Y-m-d H:i:s', $comment->create_time); ?></em>
+                    </div>
+                    <div class="panel-body">
+                        <h4 class="media-heading"> <?= nl2br($comment->content); ?></h4>
+                    </div>
                 </div>
             </div>
         </div>
