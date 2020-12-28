@@ -45,18 +45,21 @@ class Tag extends \yii\db\ActiveRecord
         ];
     }
 
-    public static function string2array($tags) {
+    public static function string2array($tags)
+    {
         return preg_split('/\s*,\s*/', trim($tags), -1, PREG_SPLIT_NO_EMPTY);
     }
 
-    public static function array2string($tags) {
+    public static function array2string($tags)
+    {
         return implode(', ', $tags);
     }
 
-    public static function addTags($tags) {
+    public static function addTags($tags)
+    {
         if (empty($tags)) return;
 
-        foreach($tags as $name) {
+        foreach ($tags as $name) {
             $aTag = Tag::find()->where(['name' => $name])->one();
             $aTagCount = Tag::find()->where(['name' => $name])->count();
             if (!$aTagCount) {
@@ -65,16 +68,17 @@ class Tag extends \yii\db\ActiveRecord
                 $tag->frequency = 1;
                 $tag->save();
             } else {
-                $aTag -> frequency += 1;
-                $aTag -> save();
+                $aTag->frequency += 1;
+                $aTag->save();
             }
         }
     }
 
-    public static function removeTags($tags) {
+    public static function removeTags($tags)
+    {
         if (empty($tags)) return;
 
-        foreach($tags as $name) {
+        foreach ($tags as $name) {
             $aTag = Tag::find()->where(['name' => $name])->one();
             $aTagCount = Tag::find()->where(['name' => $name])->count();
 
@@ -82,43 +86,31 @@ class Tag extends \yii\db\ActiveRecord
                 if ($aTagCount && $aTag->frequency <= 1) {
                     $aTag->delete();
                 } else {
-                    $aTag->frequncy -= 1;
+                    $aTag->frequency -= 1;
                     $aTag->save();
                 }
             }
         }
     }
 
-    public static function updateFrequency($oldTags, $newTags) {
+    public static function updateFrequency($oldTags, $newTags)
+    {
         if (!empty($oldTags) || !empty($newTags)) {
             $oldTagsArray = self::string2array($oldTags);
             $newTagsArray = self::string2array($newTags);
-            
+
             self::addTags(array_values(array_diff($newTagsArray, $oldTagsArray)));
             self::removeTags(array_values(array_diff($oldTagsArray, $newTagsArray)));
         }
     }
 
-    public static function findTagWeights($limit = 20) {
-        $tag_size_level = 5;
-
+    public static function findTagWeights($limit = 100)
+    {
         $models = Tag::find()->orderBy('frequency desc')->limit($limit)->all();
-        $total = Tag::find()->limit($limit)->count();
-
-        $stepper = ceil($total / $tag_size_level);
-
         $tags = array();
-        $counter = 1;
-        
-        if ($total) {
-            foreach ($models as $model) {
-                $weight = ceil($counter / $stepper) + 1;
-                $tags[$model->name] = $weight;
-                $counter++;
-            }
-            ksort($tags);
+        foreach ($models as $model) {
+            $tags[] = $model->name;
         }
-
         return $tags;
     }
 }

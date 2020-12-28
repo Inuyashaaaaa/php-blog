@@ -14,17 +14,14 @@ return [
     'defaultRoute' => 'post/index',
     'language' => 'zh-CN',
     'components' => [
-        'request' => [
-            'csrfParam' => '_csrf-frontend',
-        ],
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
             'identityCookie' => ['name' => '_identity-frontend', 'httpOnly' => true],
         ],
         'session' => [
-            // this is the name of the session cookie used for login on the frontend
-            'name' => 'advanced-frontend',
+            'name' => 'PHPFRONTSESSION',
+            'savePath' => sys_get_temp_dir(),
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
@@ -37,6 +34,10 @@ return [
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
+        ],
+        'request' => [
+            'cookieValidationKey' => 'sdfjjksloeedf78789judd',
+            'csrfParam' => '_CSRF',
         ],
         'urlManager' => [
             'enablePrettyUrl' => true,
