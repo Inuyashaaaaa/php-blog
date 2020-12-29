@@ -6,6 +6,9 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\AdminLoginForm;
+use common\models\Comment;
+use common\models\Post;
+use common\models\User;
 
 /**
  * Site controller
@@ -26,7 +29,7 @@ class SiteController extends Controller
                         'allow' => true,
                     ],
                     [
-                        'actions' => ['logout', 'index'],
+                        'actions' => ['logout', 'index', 'analyze'],
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -61,6 +64,17 @@ class SiteController extends Controller
     public function actionIndex()
     {
         return $this->render('index');
+    }
+
+    public function actionAnalyze() {
+        $comment = Comment::find()->count();
+        $post = Post::find()->count();
+        $user = User::find()->count();
+        return $this->render('analyze', [
+            'comment' => $comment,
+            'post' => $post,
+            'user' => $user,
+        ]); 
     }
 
     /**
